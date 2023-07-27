@@ -26,16 +26,16 @@ const login = async(req,res)=>{
 }
 
 const testController = async(req,res)=>{
-  const response = await pool.query("select myuser.owner_id,role.role_name from role inner join myuser on role.role_id = myuser.role_id where username = '90' and password = '1234567890';");
+  const response = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where measurement_datetime between '2023-07-20' and '2023-07-26' group by measurement_datetime order by measurement_datetime;");
   if(response.rowCount == 0){
     console.log("Hello moto")
   }
+  console.log(response.rows)
   res.status(200).json({res:"Success",data:response.rows})
 }
 
 const getFailCounts = async(req,res)=>{
   const response = await pool.query("select vehicle.vehicle_type,count(vehicle.vehicle_type) from vehicle inner join pollutant_measurement on vehicle.vehicle_id = pollutant_measurement.vehicle_id where pollutant_measurement.co_value > (select avg(co_value) from pollutant_measurement) or pollutant_measurement.hcho_value > (select avg(hcho_value) from pollutant_measurement) or no_value > (select avg(no_value) from pollutant_measurement) or pm > (select avg(pm) from pollutant_measurement) group by vehicle.vehicle_type;")
-  console.log(response.rows)
   let arr=[]
   let obj = {}
   for(let i=0;i<response.rows.length;++i){
@@ -61,9 +61,7 @@ const getFailedDayWiseBarData = async (req,res)=>{
   for(let i=0;i<=6;++i){
     let day = oldDate.getDate()+i
     od += oldDate.getFullYear() + "-" + oldmonth + "-" +day
-    console.log(od)
     const response = await pool.query("select vehicle.vehicle_type,count(vehicle.vehicle_type) from vehicle inner join pollutant_measurement on vehicle.vehicle_id = pollutant_measurement.vehicle_id where pollutant_measurement.measurement_datetime = '"+od+"' and ( pollutant_measurement.co_value > (select avg(co_value) from pollutant_measurement) or pollutant_measurement.hcho_value > (select avg(hcho_value) from pollutant_measurement) or no_value > (select avg(no_value) from pollutant_measurement) or pm > (select avg(pm) from pollutant_measurement)) group by vehicle.vehicle_type;")
-    console.log(response.rows)
     obj['date']=od
     for(let j=0;j<response.rows.length;++j){
       obj[response.rows[j].vehicle_type] = response.rows[j].count
@@ -83,11 +81,31 @@ const dailyEmmitedGasPie = async (req,res)=>{
   const response = await pool.query(" select sum(co_value) as co_value,sum(no_value) as no_value,sum(hcho_value) as hcho_value,sum(pm) as pm from pollutant_measurement where measurement_datetime = '"+cd+"';")
   let obj = {},sum=0
   sum+=parseFloat(response.rows[0]?.co_value) + parseFloat(response.rows[0]?.no_value) + parseFloat(response.rows[0]?.hcho_value) + parseFloat(response.rows[0]?.pm)
-  obj['CO'] = (parseFloat(response.rows[0]?.co_value)/sum)*100
-  obj['NO'] = (parseFloat(response.rows[0]?.no_value)/sum)*100
-  obj['HCHO'] = (parseFloat(response.rows[0]?.hcho_value)/sum)*100
-  obj['PM'] = (parseFloat(response.rows[0]?.pm)/sum)*100
-  res.status(200).json({res:"Success",data:obj})
+  arr = []
+  obj['id'] = 'CO'
+  obj['label'] = 'CO'
+  obj['value'] = (parseFloat(response.rows[0]?.co_value)/sum)*100
+  obj['color'] = 'green'
+  arr.push(obj)
+  obj={}
+  obj['id'] = 'NO'
+  obj['label'] = 'NO'
+  obj['value'] = (parseFloat(response.rows[0]?.no_value)/sum)*100
+  obj['color'] = 'green'
+  arr.push(obj)
+  obj={}
+  obj['id'] = 'HCHO'
+  obj['label'] = 'HCHO'
+  obj['value'] = (parseFloat(response.rows[0]?.hcho_value)/sum)*100
+  obj['color'] = 'green'
+  arr.push(obj)
+  obj={}
+  obj['id'] = 'PM'
+  obj['label'] = 'PM'
+  obj['value'] = (parseFloat(response.rows[0]?.pm)/sum)*100
+  obj['color'] = 'green'
+  arr.push(obj)
+  res.status(200).json({res:"Success",data:arr})
 }
 
 const totalGasEmmitedPerDayPerUser = async (req,res)=>{
@@ -101,25 +119,80 @@ const totalGasEmmitedPerDayPerUser = async (req,res)=>{
   for(let i=0;i<response.rowCount;++i){
     const resp = await pool.query("select sum(co_value) as co,sum(no_value) as po,sum(hcho_value) as hcho,sum(pm) as pm from pollutant_measurement where vehicle_id = "+arr[i].vehicle_id+" and measurement_datetime = '"+cd+"';")
     arr[i]['data'] = resp.rows[0]
+    let finalarr = [] 
+    let obj = {}
+    const oldDate = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
+    const oldmonth = oldDate.getMonth()+1
+    let od=''
+  od += oldDate.getFullYear() + "-" + oldmonth + "-" +oldDate.getDate()
+  const currdate = new Date()
+  const currmonth = currdate.getMonth()+1
+  const responsee = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='CO'
+  obj['data'] = responsee.rows
+  obj['color'] = 'red'
+  finalarr.push(obj)
+  obj={}
+  const responseno = await pool.query("select measurement_datetime as x,avg(no_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='NO'
+  obj['data'] = responseno.rows
+  obj['color'] = 'yellow'
+  finalarr.push(obj)
+  obj={}
+  const responsehcho = await pool.query("select measurement_datetime as x,avg(hcho_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='HCHO'
+  obj['data'] = responsehcho.rows
+  obj['color'] = 'blue'
+  finalarr.push(obj)
+  obj={}
+  const responsepm = await pool.query("select measurement_datetime as x,avg(pm) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='PM'
+  obj['data'] = responsepm.rows
+  obj['color'] = 'green'
+  finalarr.push(obj)
+  arr[i]['chart'] = finalarr
   }
   res.status(200).json({res:'Success',data:arr})
 }
 
 const getAverageEmmisionDayWiseLineChartData = async (req,res)=>{
+
+  let finalarr = [] 
+  let obj = {}
   const oldDate = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
   const oldmonth = oldDate.getMonth()+1
   let od=''
-  let arr=[]
-  for(let i=0;i<=6;++i){
-    let day = oldDate.getDate()+i
-    od += oldDate.getFullYear() + "-" + oldmonth + "-" +day
-    console.log(od)
-    const response = await pool.query(" select avg(no_value) as no,avg(co_value) as co,avg(hcho_value) as hcho,avg(pm) as pm from pollutant_measurement where measurement_datetime = '"+od+"';")
-    response.rows[0]['date'] = od
-    arr.push(response.rows[0])
-    od=''
-  }
-  res.status(200).json({res:"Success",data:arr})
+  od += oldDate.getFullYear() + "-" + oldmonth + "-" +oldDate.getDate()
+  const currdate = new Date()
+  const currmonth = currdate.getMonth()+1
+  let cd=''
+  cd += currdate.getFullYear() + "-" + currmonth + "-" +currdate.getDate()
+  const response = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where measurement_datetime between '"+od+"' and '"+cd+"' group by measurement_datetime order by measurement_datetime;")
+  obj['id']='CO'
+  obj['data'] = response.rows
+  obj['color'] = 'red'
+  
+  finalarr.push(obj)
+  obj={}
+  const responseno = await pool.query("select measurement_datetime as x,avg(no_value) as y from pollutant_measurement where measurement_datetime between '"+od+"' and '"+cd+"' group by measurement_datetime order by measurement_datetime;")
+  obj['id']='NO'
+  obj['data'] = responseno.rows
+  obj['color'] = 'yellow'
+  finalarr.push(obj)
+  obj={}
+  const responsehcho = await pool.query("select measurement_datetime as x,avg(hcho_value) as y from pollutant_measurement where measurement_datetime between '"+od+"' and '"+cd+"' group by measurement_datetime order by measurement_datetime;")
+  obj['id']='HCHO'
+  obj['data'] = responsehcho.rows
+  obj['color'] = 'blue'
+  finalarr.push(obj)
+  obj={}
+  const responsepm = await pool.query("select measurement_datetime as x,avg(pm) as y from pollutant_measurement where measurement_datetime between '"+od+"' and '"+cd+"' group by measurement_datetime order by measurement_datetime;")
+  obj['id']='PM'
+  obj['data'] = responsepm.rows
+  obj['color'] = 'green'
+  finalarr.push(obj)
+
+  res.status(200).json({res:"Success",data:finalarr})
 }
 
 const getAverageEmmisionDayWiseLineChartForUser = async(req,res)=>{
@@ -127,23 +200,45 @@ const getAverageEmmisionDayWiseLineChartForUser = async(req,res)=>{
   const responsee = await pool.query("select vehicle_id,registration_number from vehicle where owner_id = "+userId+";")
   let objj = {}
   let final_arr = []  
-  for(let j=0;j<responsee.rowCount;++j){
-    objj['registration_number'] = responsee.rows[j].registration_number
+  
+  for(let i=0;i<responsee.rowCount;++i){
+    objj['registration_number'] = responsee.rows[i].registration_number
+    let finalarr = [] 
+    let obj = {}
     const oldDate = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
     const oldmonth = oldDate.getMonth()+1
     let od=''
-    let arr=[]
-    for(let i=0;i<=6;++i){
-      let day = oldDate.getDate()+i
-      od += oldDate.getFullYear() + "-" + oldmonth + "-" +day
-      const response = await pool.query(" select avg(no_value) as no,avg(co_value) as co,avg(hcho_value) as hcho,avg(pm) as pm from pollutant_measurement where measurement_datetime = '"+od+"' and vehicle_id = "+responsee.rows[j].vehicle_id+";")
-      response.rows[0]['date'] = od
-      arr.push(response.rows[0])
-      od=''
-    }
-    objj['data'] = arr
-    final_arr.push(objj)
-    objj={}
+  od += oldDate.getFullYear() + "-" + oldmonth + "-" +oldDate.getDate()
+  const currdate = new Date()
+  const currmonth = currdate.getMonth()+1
+  let cd=''
+  cd += currdate.getFullYear() + "-" + currmonth + "-" +currdate.getDate()
+  const response = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+responsee.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='CO'
+  obj['data'] = response.rows
+  obj['color'] = 'red'
+  finalarr.push(obj)
+  obj={}
+  const responseno = await pool.query("select measurement_datetime as x,avg(no_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+responsee.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='NO'
+  obj['data'] = responseno.rows
+  obj['color'] = 'yellow'
+  finalarr.push(obj)
+  obj={}
+  const responsehcho = await pool.query("select measurement_datetime as x,avg(hcho_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+responsee.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='HCHO'
+  obj['data'] = responsehcho.rows
+  obj['color'] = 'blue'
+  finalarr.push(obj)
+  obj={}
+  const responsepm = await pool.query("select measurement_datetime as x,avg(pm) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+responsee.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  obj['id']='PM'
+  obj['data'] = responsepm.rows
+  obj['color'] = 'green'
+  finalarr.push(obj)
+  objj['data'] = finalarr 
+  final_arr.push(objj)
+  objj = {}
   }
   res.status(200).json({res:"Success",data:final_arr})
 }
