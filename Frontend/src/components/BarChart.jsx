@@ -80,7 +80,7 @@ const BarChart = ({ isDashboard = false , newData }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "country", // changed
+        legend: isDashboard ? undefined : "Dates", // changed
         legendPosition: "middle",
         legendOffset: 32,
       }}
@@ -88,7 +88,7 @@ const BarChart = ({ isDashboard = false , newData }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "food", // changed
+        legend: isDashboard ? undefined : "Number of vehicles failed in each category", // changed
         legendPosition: "middle",
         legendOffset: -40,
       }}

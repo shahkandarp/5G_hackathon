@@ -63,7 +63,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false ,cdata}) =>
         tickSize: 0,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "transportation", // added
+        legend: isDashboard ? undefined : "Dates", // added
         legendOffset: 36,
         legendPosition: "middle",
       }}
@@ -73,7 +73,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false ,cdata}) =>
         tickSize: 3,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "count", // added
+        legend: isDashboard ? undefined : "Average emission of each gas on each day", // added
         legendOffset: -40,
         legendPosition: "middle",
       }}

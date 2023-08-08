@@ -17,7 +17,8 @@ const Line = () => {
   },[])
   return (
     <Box m="20px">
-      <Header title="Line Chart" subtitle="Simple Line Chart" />
+      {/* <Header title="Average gas emmited per day weekly" subtitle="Simple Line Chart" /> */}
+      <Header title="Average gas emmited per day weekly" />
       <Box height="75vh">
         <LineChart cdata={chartdata}/>
       </Box>

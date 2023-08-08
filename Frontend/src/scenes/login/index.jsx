@@ -39,7 +39,7 @@ export default function SignIn() {
                 navigate('/mainindex')
             }
         }catch(err){
-            console.log(err.response.data.msg)
+            console.log(err)
         }
 
     }

@@ -20,7 +20,8 @@ const Pie = () => {
   },[])
   return (
     <Box m="20px">
-      <Header title="Pie Chart" subtitle="Simple Pie Chart" />
+      {/* <Header title="Pie Chart" subtitle="Simple Pie Chart" /> */}
+      <Header title="Average gas emmitted by the vehicles today" />
       <Box height="75vh">
         <PieChart newData = {newData}/>
       </Box>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link } from "react-router-dom";
@@ -11,6 +11,7 @@ import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import axios from "axios";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -35,6 +36,25 @@ const Sidebar = () => {
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+
+  const [name,setName] =useState('')
+  const [role,setRole] = useState('')
+
+  useEffect(()=>{
+    const fetchdata = async()=>{
+      const token = localStorage.getItem('token')
+      const role = localStorage.getItem('role')
+      setRole(role)
+      const response = await axios.get('http://127.0.0.1:3002/api/v1/views/getRTOName',{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      })
+      console.log(response.data.data.name)
+      setName(response.data.data.name)
+    }
+    fetchdata()
+  },[])
 
   return (
     <Box
@@ -75,7 +95,7 @@ const Sidebar = () => {
                 ml="15px"
               >
                 <Typography variant="h3" color={colors.grey[100]}>
-                  ADMIN
+                  {role}
                 </Typography>
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <MenuOutlinedIcon />
@@ -91,7 +111,7 @@ const Sidebar = () => {
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={`../../assets/user.png`}
+                  src={`../../assets/ishan.jpeg`}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
@@ -102,10 +122,10 @@ const Sidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  Nakshatra Vyas
+                  {name}
                 </Typography>
                 <Typography variant="h5" color={colors.greenAccent[500]}>
-                  RTO Admin
+                  {`${role} ADMIN`}
                 </Typography>
               </Box>
             </Box>
@@ -186,21 +206,21 @@ const Sidebar = () => {
               Analytics
             </Typography>
             <Item
-              title="Bar Chart"
+              title="Number of vehicles failed in each category weakly"
               to="bar"
               icon={<BarChartOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Pie Chart"
+              title="Average gas emmitted by the vehicles today"
               to="pie"
               icon={<PieChartOutlineOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Line Chart"
+              title="Average gas emmited per day weekly"
               to="line"
               icon={<TimelineOutlinedIcon />}
               selected={selected}

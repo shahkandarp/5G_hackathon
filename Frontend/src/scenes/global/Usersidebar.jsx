@@ -11,10 +11,13 @@ import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import axios from "axios";
+import { useEffect } from "react";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  
   return (
     <MenuItem
       active={selected === title}
@@ -35,6 +38,26 @@ const UserSidebar = () => {
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+
+  const [name,setName] =useState('')
+  const [role,setRole] = useState('')
+
+  useEffect(()=>{
+    const fetchdata = async()=>{
+      const token = localStorage.getItem('token')
+      const role = localStorage.getItem('role')
+      console.log(role)
+      setRole(role)
+      const response = await axios.get('http://127.0.0.1:3002/api/v1/views/getUserName',{
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      })
+      console.log(response.data.data.name)
+      setName(response.data.data.name)
+    }
+    fetchdata()
+  },[])
 
   return (
     <Box
@@ -75,7 +98,7 @@ const UserSidebar = () => {
                 ml="15px"
               >
                 <Typography variant="h3" color={colors.grey[100]}>
-                  USER
+                  {role}
                 </Typography>
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <MenuOutlinedIcon />
@@ -91,7 +114,7 @@ const UserSidebar = () => {
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={`../../assets/user.png`}
+                  src={`../../assets/kandarp.jpeg`}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>
@@ -102,7 +125,7 @@ const UserSidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  Nakshatra Vyas
+                  {name}
                 </Typography>
               </Box>
             </Box>

@@ -117,7 +117,7 @@ const totalGasEmmitedPerDayPerUser = async (req,res)=>{
   const response = await pool.query("select vehicle_id,registration_number from vehicle where owner_id = "+userId+";")
   const arr = response.rows
   for(let i=0;i<response.rowCount;++i){
-    const resp = await pool.query("select sum(co_value) as co,sum(no_value) as po,sum(hcho_value) as hcho,sum(pm) as pm from pollutant_measurement where vehicle_id = "+arr[i].vehicle_id+" and measurement_datetime = '"+cd+"';")
+    const resp = await pool.query("select round(avg(co_value)) as co,round(avg(no_value)) as po,round(avg(hcho_value)) as hcho,round(avg(pm)) as pm from pollutant_measurement where vehicle_id = "+arr[i].vehicle_id+" and measurement_datetime = '"+cd+"';")
     arr[i]['data'] = resp.rows[0]
     let finalarr = [] 
     let obj = {}
@@ -125,8 +125,10 @@ const totalGasEmmitedPerDayPerUser = async (req,res)=>{
     const oldmonth = oldDate.getMonth()+1
     let od=''
   od += oldDate.getFullYear() + "-" + oldmonth + "-" +oldDate.getDate()
-  const currdate = new Date()
-  const currmonth = currdate.getMonth()+1
+  //const currdate = new Date()
+  //const currmonth = currdate.getMonth()+1
+  let cd1 = ''
+  cd1+=currDate.getFullYear() + "-" + currmonth + "-" +(currDate.getDate()+1)
   const responsee = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
   obj['id']='CO'
   obj['data'] = responsee.rows
@@ -242,4 +244,25 @@ const getAverageEmmisionDayWiseLineChartForUser = async(req,res)=>{
   }
   res.status(200).json({res:"Success",data:final_arr})
 }
-module.exports = {testController,getFailCounts,getFailedDetails,getFailedDayWiseBarData,dailyEmmitedGasPie,login,totalGasEmmitedPerDayPerUser,getAverageEmmisionDayWiseLineChartData,getAverageEmmisionDayWiseLineChartForUser}
+
+const getAdminName = async(req,res)=>{
+  const {adminId} = req.user
+  const response = await pool.query("select * from owner where owner_id = "+adminId+";")
+  res.status(200).json({res:"Success",data:response.rows[0]})
+}
+
+const getRTOName = async(req,res)=>{
+  const {rtoId} = req.user
+  const response = await pool.query("select * from owner where owner_id = "+rtoId+";")
+  res.status(200).json({res:"Success",data:response.rows[0]})
+}
+
+const getUserName = async(req,res)=>{
+  const {userId} = req.user
+  const response = await pool.query("select * from owner where owner_id = "+userId+";")
+  res.status(200).json({res:"Success",data:response.rows[0]})
+}
+
+
+
+module.exports = {testController,getFailCounts,getFailedDetails,getFailedDayWiseBarData,dailyEmmitedGasPie,login,totalGasEmmitedPerDayPerUser,getAverageEmmisionDayWiseLineChartData,getAverageEmmisionDayWiseLineChartForUser,getUserName,getRTOName,getAdminName}

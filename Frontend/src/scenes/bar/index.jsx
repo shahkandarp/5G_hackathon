@@ -17,7 +17,8 @@ const Bar = () => {
   },[])
   return (
     <Box m="20px">
-      <Header title="Bar Chart" subtitle="Simple Bar Chart" />
+      {/* <Header title="Number of vehicles failed in each category weakly" subtitle="Simple Bar Chart" /> */}
+      <Header title="Number of vehicles failed in each category weekly" />
       <Box height="75vh">
         <BarChart newData={newData}/>
       </Box>
