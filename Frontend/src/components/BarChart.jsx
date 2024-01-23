@@ -9,6 +9,7 @@ import axios from "axios";
 const BarChart = ({ isDashboard = false , newData }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  console.log(data)
   
 
   return (

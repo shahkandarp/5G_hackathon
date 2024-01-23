@@ -116,6 +116,7 @@ const totalGasEmmitedPerDayPerUser = async (req,res)=>{
   cd+=currDate.getFullYear() + "-" + currmonth + "-" +currDate.getDate()
   const response = await pool.query("select vehicle_id,registration_number from vehicle where owner_id = "+userId+";")
   const arr = response.rows
+  //console.log(cd)
   for(let i=0;i<response.rowCount;++i){
     const resp = await pool.query("select round(avg(co_value)) as co,round(avg(no_value)) as po,round(avg(hcho_value)) as hcho,round(avg(pm)) as pm from pollutant_measurement where vehicle_id = "+arr[i].vehicle_id+" and measurement_datetime = '"+cd+"';")
     arr[i]['data'] = resp.rows[0]
@@ -125,11 +126,15 @@ const totalGasEmmitedPerDayPerUser = async (req,res)=>{
     const oldmonth = oldDate.getMonth()+1
     let od=''
   od += oldDate.getFullYear() + "-" + oldmonth + "-" +oldDate.getDate()
+  //console.log(od)
   //const currdate = new Date()
   //const currmonth = currdate.getMonth()+1
   let cd1 = ''
   cd1+=currDate.getFullYear() + "-" + currmonth + "-" +(currDate.getDate()+1)
+  //console.log(cd1)
   const responsee = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  //console.log("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd1+"') and vehicle_id = "+response.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  //console.log(responsee.rows)
   obj['id']='CO'
   obj['data'] = responsee.rows
   obj['color'] = 'red'
@@ -170,6 +175,7 @@ const getAverageEmmisionDayWiseLineChartData = async (req,res)=>{
   let cd=''
   cd += currdate.getFullYear() + "-" + currmonth + "-" +currdate.getDate()
   const response = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where measurement_datetime between '"+od+"' and '"+cd+"' group by measurement_datetime order by measurement_datetime;")
+  //console.log("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where measurement_datetime between '"+od+"' and '"+cd+"' group by measurement_datetime order by measurement_datetime;")
   obj['id']='CO'
   obj['data'] = response.rows
   obj['color'] = 'red'
@@ -216,6 +222,7 @@ const getAverageEmmisionDayWiseLineChartForUser = async(req,res)=>{
   let cd=''
   cd += currdate.getFullYear() + "-" + currmonth + "-" +currdate.getDate()
   const response = await pool.query("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+responsee.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
+  //console.log("select measurement_datetime as x,avg(co_value) as y from pollutant_measurement where (measurement_datetime between '"+od+"' and '"+cd+"') and vehicle_id = "+responsee.rows[i].vehicle_id+" group by measurement_datetime order by measurement_datetime;")
   obj['id']='CO'
   obj['data'] = response.rows
   obj['color'] = 'red'
